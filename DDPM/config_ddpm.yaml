@@ -3,7 +3,7 @@ train: False # lancer une routine d'entraînement ?
 old_model: True # reprendre depuis le dernier meilleur modèle ?
 device: "mps"
 seed: 0
-image_save_path: "sample1.png"
+image_save_path: "./DDPM_generated"
 
 # paramètres de diffusion
 n_steps: 1000
