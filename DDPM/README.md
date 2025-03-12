@@ -14,7 +14,7 @@ On trouve dans ce dossier les codes relatifs à l'implémentation de DDPM sur MN
   -- si old_model=True, train=False : on utilise le modèle enregistré, dont le nom est renseigné dans "store_path". C'est le fonctionnement par défaut. Dans ce cadre, il n'y a pas de routine d'entraînement et le modèle renseigné est chargé. Notez qu'il faut alors ne pas changer les paramètres du DDPM.
     Dans ce cas, la seule fonction appelée est generate_for_comparison, qui génère par défaut 100 images dans le dossier DDPM_generated (à créer en amont).
 
-  -- si old_model=True, train=False : on utilise l'ancien modèle qu'on continue à entraîner pour le nombre d'epochs renseigné. Penser alors à modifier store_path pour ne pas perdre le modèle précédent. Ce paramétrage permet un entraînement sur plusieurs sessions.
+  -- si old_model=True, train=True : on utilise l'ancien modèle qu'on continue à entraîner pour le nombre d'epochs renseigné. Penser alors à modifier store_path pour ne pas perdre le modèle précédent. Ce paramétrage permet un entraînement sur plusieurs sessions.
 
   -- si old_model=False, train=True : on repart de zéro ; routine d'apprentissage à partir d'un modèle initialisé aléatoirement.
   
