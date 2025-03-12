@@ -93,6 +93,49 @@ class MyDDPM(nn.Module):
     def backward(self, x, t):
         return self.network(x, t)  # envoie x, t dans le UNET. En sortie, le bruit estimé sur x au temps t
 
+def show_images(images, title=""):
+
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    # Converting images to CPU numpy arrays
+    if isinstance(images, torch.Tensor):
+        images = images.detach().cpu().numpy()
+
+    # Détection du nombre de canaux
+    channels = images.shape[1]  # (batch_size, channels, height, width)
+
+    # Si c'est une image en niveau de gris, on enlève la dimension des canaux
+    if channels == 1:
+        images = images[:, 0, :, :]  # (batch_size, height, width)
+    else:
+        # Transposer (C, H, W) → (H, W, C) pour plt.imshow()
+        images = np.transpose(images, (0, 2, 3, 1))
+
+    # Defining number of rows and columns
+    fig = plt.figure(figsize=(8, 8))
+    rows = int(len(images) ** (1 / 2))
+    cols = round(len(images) / rows)
+    
+    # Remet les pixels dans [0, 1] en inversant la normalisation
+    images = (images + 1) / 2
+    
+    # Populating figure with sub-plots
+    idx = 0
+    for r in range(rows):
+        for c in range(cols):
+            fig.add_subplot(rows, cols, idx + 1)
+
+            if idx < len(images):
+                plt.imshow(images[idx], cmap="gray" if channels == 1 else None)
+                plt.axis('off')
+                idx += 1
+
+    fig.suptitle(title, fontsize=30)
+
+    # Showing the figure
+    plt.show()
+
 
 def show_first_batch(loader):
     for batch in loader:
