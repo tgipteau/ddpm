@@ -7,10 +7,19 @@ On trouve dans ce dossier les codes relatifs à l'implémentation de DDPM sur MN
 - <i> unet_mnist.py </i> : modèle unet adapté au format des images mnist. Utilisé par main.py si unet_model = "unet_mnist" dans le yaml.
 - <i> unet_cifar.py </i> : résidu d'un essai d'application de DDPM aux images Cifar, par concluant. Ne pas utiliser ce modèle.
 
-- <i> main.py </i> : code principal du ddpm ; son contenu est décrit ci-dessous
+- <i> main.py </i> : code principal du ddpm. On décrit l'influence du .yaml ci-dessous :
 
-<h3> main.py </h3>
+  -- on pensera à renseigner le bon device dans le yaml. Sur mac, on a utilisé "mps". Les autres choix possibles sont "cuda" et "cpu".
 
-lignes 1 à 65 : imports et chargement de la configuration inscrite dans config_ddpm.yaml.
-ligne 69 : déclaration de la classe "MyDDPM"
-ligne 
+  -- si old_model=True, train=False : on utilise le modèle enregistré, dont le nom est renseigné dans "store_path". C'est le fonctionnement par défaut. Dans ce cadre, il n'y a pas de routine d'entraînement et le modèle renseigné est chargé. Notez qu'il faut alors ne pas changer les paramètres du DDPM.
+    Dans ce cas, la seule fonction appelée est generate_for_comparison, qui génère par défaut 100 images dans le dossier DDPM_generated (à créer en amont).
+
+  -- si old_model=True, train=False : on utilise l'ancien modèle qu'on continue à entraîner pour le nombre d'epochs renseigné. Penser alors à modifier store_path pour ne pas perdre le modèle précédent. Ce paramétrage permet un entraînement sur plusieurs sessions.
+
+  -- si old_model=False, train=True : on repart de zéro ; routine d'apprentissage à partir d'un modèle initialisé aléatoirement.
+  
+  -- les résultats présentés sont issus de la graine aléatoire 0, qui donnera toujours les mêmes sorties. Pour obtenir des résultats nouveaux, il est nécessaire de changer cette valeur.
+
+  
+  
+  
