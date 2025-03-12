@@ -93,57 +93,13 @@ class MyDDPM(nn.Module):
     def backward(self, x, t):
         return self.network(x, t)  # envoie x, t dans le UNET. En sortie, le bruit estimé sur x au temps t
 
-def show_images(images, title=""):
-    """Shows the provided images as sub-pictures in a square"""
 
-    import matplotlib.pyplot as plt
-    import numpy as np
-
-    # Converting images to CPU numpy arrays
-    if isinstance(images, torch.Tensor):
-        images = images.detach().cpu().numpy()
-
-    # Détection du nombre de canaux
-    channels = images.shape[1]  # (batch_size, channels, height, width)
-
-    # Si c'est une image en niveau de gris, on enlève la dimension des canaux
-    if channels == 1:
-        images = images[:, 0, :, :]  # (batch_size, height, width)
-    else:
-        # Transposer (C, H, W) → (H, W, C) pour plt.imshow()
-        images = np.transpose(images, (0, 2, 3, 1))
-
-    # Defining number of rows and columns
-    fig = plt.figure(figsize=(8, 8))
-    rows = int(len(images) ** (1 / 2))
-    cols = round(len(images) / rows)
-    
-    # Remet les pixels dans [0, 1] en inversant la normalisation
-    images = (images + 1) / 2
-    
-    # Populating figure with sub-plots
-    idx = 0
-    for r in range(rows):
-        for c in range(cols):
-            fig.add_subplot(rows, cols, idx + 1)
-
-            if idx < len(images):
-                plt.imshow(images[idx], cmap="gray" if channels == 1 else None)
-                plt.axis('off')
-                idx += 1
-
-    fig.suptitle(title, fontsize=30)
-
-    # Showing the figure
-    plt.show()
-    
 def show_first_batch(loader):
     for batch in loader:
         show_images(batch[0], "Images in the first batch")
         break
 
 def show_forward(ddpm, loader):
-    # Showing the forward process
     for batch in loader:
         imgs = batch[0]
 
@@ -157,64 +113,6 @@ def show_forward(ddpm, loader):
             )
         break
         
-def generate_new_images(ddpm, n_samples=16, frames_per_gif=100, gif_name="sampling.gif"):
-    """Given a DDPM model, a number of samples to be generated and a device, returns some newly generated samples"""
-    frame_idxs = np.linspace(0, n_steps, frames_per_gif).astype(np.uint)
-    frames = []
-
-    with torch.no_grad():
-
-        # Starting from random noise
-        x = torch.randn(n_samples, c, h, w).to(device)
-
-        for idx, t in enumerate(list(range(n_steps))[::-1]):
-            # Estimating noise to be removed
-            time_tensor = (torch.ones(n_samples, 1) * t).to(device).long()
-            eta_theta = ddpm.backward(x, time_tensor)
-
-            alpha_t = ddpm.alphas[t]
-            alpha_t_bar = ddpm.alpha_bars[t]
-
-            # Partially denoising the image
-            x = (1 / alpha_t.sqrt()) * (x - (1 - alpha_t) / (1 - alpha_t_bar).sqrt() * eta_theta)
-
-            if t > 0:
-                z = torch.randn(n_samples, c, h, w).to(device)
-
-                # Option 1: sigma_t squared = beta_t
-                beta_t = ddpm.betas[t]
-                sigma_t = beta_t.sqrt()
-                
-                # ajout de bruit "à la Langevin"
-                x = x + sigma_t * z
-
-            # Adding frames to the GIF
-            if idx in frame_idxs or t == 0:
-                # Putting digits in range [0, 255]
-                normalized = x.clone()
-                for i in range(len(normalized)):
-                    normalized[i] -= torch.min(normalized[i])
-                    normalized[i] *= 255 / torch.max(normalized[i])
-
-                # Reshaping batch (n, c, h, w) to be a (as much as it gets) square frame
-                frame = einops.rearrange(normalized, "(b1 b2) c h w -> (b1 h) (b2 w) c", b1=int(n_samples ** 0.5))
-                frame = frame.cpu().numpy().astype(np.uint8)
-
-                # Rendering frame
-                frames.append(frame)
-
-    # Storing the gif
-    with imageio.get_writer(gif_name, mode="I") as writer:
-        for idx, frame in enumerate(frames):
-            rgb_frame = np.repeat(frame, 3, axis=2)
-            writer.append_data(rgb_frame)
-
-            # Showing the last frame for a longer time
-            if idx == len(frames) - 1:
-                last_rgb_frame = np.repeat(frames[-1], 3, axis=2)
-                for _ in range(frames_per_gif // 3):
-                    writer.append_data(last_rgb_frame)
-    return x
 
 def training_loop(ddpm, loader, optim, display=False):
     mse = nn.MSELoss()
@@ -294,7 +192,7 @@ def generate_for_comparison(n_samples=100) :
             # plt.imshow(img, cmap="gray")
             # plt.show()
             img = (img - img.min()) / (img.max() - img.min())
-            save_image(img, os.path.join("./DDPM_generated", f"ddpm_{i + 1}.png"))
+            save_image(img, os.path.join(store_path, f"ddpm_{i + 1}.png"))
 
 
 ### MAIN
@@ -338,11 +236,5 @@ if __name__ == "__main__":
     total_params = sum(p.numel() for p in ddpm.parameters())
     print(f"Nombre total de paramètres : {total_params}")
     
-    print("Generating new images")
-    generated = generate_new_images(
-        best_model,
-        n_samples=64,
-        gif_name=config["image_save_path"],
-    )
-    show_images(generated, "Résultat final")
+    generate_for_comparison()
     
