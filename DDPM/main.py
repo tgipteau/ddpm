@@ -58,6 +58,7 @@ n_epochs = config['n_epochs']
 lr = config['lr']
 device = config['device']
 store_path = config['store_path']
+image_save_path = config['image_save_path']
 
 # paramètres du modèle unet
 n_steps = config["n_steps"]
@@ -235,7 +236,7 @@ def generate_for_comparison(n_samples=100) :
             # plt.imshow(img, cmap="gray")
             # plt.show()
             img = (img - img.min()) / (img.max() - img.min())
-            save_image(img, os.path.join(store_path, f"ddpm_{i + 1}.png"))
+            save_image(img, os.path.join(image_save_path, f"ddpm_{i + 1}.png"))
 
 
 ### MAIN
